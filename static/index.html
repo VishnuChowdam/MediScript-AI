@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediScript AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0ea5e9', // Sky 500
+                        secondary: '#14b8a6', // Teal 500
+                        dark: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #0ea5e9, #14b8a6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-pattern {
+            background-color: #f8fafc;
+            background-image: radial-gradient(circle at center, #cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-sky-200">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <div class="bg-gradient-to-br from-sky-500 to-teal-500 text-white p-1.5 rounded-lg shadow-md">
+                        <span class="material-icons text-xl">health_and_safety</span>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-slate-900">MediScript<span
+                            class="text-sky-500">AI</span></span>
+                </div>
+                <div>
+                    <a href="/dashboard"
+                        class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-full transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                        Check now <span class="material-icons ml-1"
+                            style="font-size: 16px;">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden hero-pattern min-h-screen flex items-center">
+        <!-- Background glows -->
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-sky-200/40 rounded-full blur-3xl opacity-50 pointer-events-none">
+        </div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-700 font-medium text-sm mb-8 shadow-sm">
+                <span class="relative flex h-2 w-2">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                </span>
+                MediScript AI 2.0 is now live
+            </div>
+
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 drop-shadow-sm">
+                Understand Prescriptions <br />
+                <span class="gradient-text">In Seconds</span>
+            </h1>
+
+            <p class="mt-4 max-w-2xl mx-auto text-xl text-slate-600 mb-10 leading-relaxed">
+                Upload handwritten medical prescriptions and instantly extract medications, dosages, and critical
+                AI-driven warnings. Turn unreadable paper into actionable insights.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="/dashboard"
+                    class="group relative inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-gradient-to-b from-sky-400 to-sky-600 border border-sky-500 rounded-full overflow-hidden transition-all shadow-[0_0_40px_-10px_rgba(14,165,233,0.5)] hover:shadow-[0_0_60px_-15px_rgba(14,165,233,0.7)] hover:-translate-y-1 w-full sm:w-auto">
+                    <div
+                        class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out">
+                    </div>
+                    <span class="relative flex items-center gap-2">Get Started Now <span
+                            class="material-icons text-sm">rocket_launch</span></span>
+                </a>
+                <a href="#features"
+                    class="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-full transition-all shadow-sm w-full sm:w-auto">
+                    Learn More
+                </a>
+            </div>
+
+            <!-- Preview Image / Graphic -->
+      
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div id="features" class="py-24 bg-white relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-slate-900 sm:text-4xl">Everything you need</h2>
+                <p class="mt-4 text-lg text-slate-600">Powerful AI tools to digitize and understand medical data.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div
+                    class="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-xl hover:border-sky-100 transition-all duration-300 group">
+                    <div
+                        class="w-14 h-14 bg-sky-100 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-sky-500 transition-all duration-300">
+                        <span
+                            class="material-icons text-sky-600 group-hover:text-white transition-colors">document_scanner</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Handwriting Recognition</h3>
+                    <p class="text-slate-600 leading-relaxed">State-of-the-art Generative AI interprets even the most
+                        difficult doctor handwriting with high accuracy.</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div
+                    class="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-xl hover:border-teal-100 transition-all duration-300 group">
+                    <div
+                        class="w-14 h-14 bg-teal-100 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-teal-500 transition-all duration-300">
+                        <span
+                            class="material-icons text-teal-600 group-hover:text-white transition-colors">warning_amber</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Critical Warnings</h3>
+                    <p class="text-slate-600 leading-relaxed">Automatically detects drug interactions, dosage anomalies,
+                        and duration warnings to keep you safe.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div
+                    class="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-xl hover:border-indigo-100 transition-all duration-300 group">
+                    <div
+                        class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-indigo-500 transition-all duration-300">
+                        <span
+                            class="material-icons text-indigo-600 group-hover:text-white transition-colors">smart_toy</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">AI assistant</h3>
+                    <p class="text-slate-600 leading-relaxed">Chat with a specialized medical AI assistant about your
+                        specific prescription context and questions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Footer -->
+    <footer class="bg-black border-t border-slate-200 py-8">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span class="material-icons text-sky-500">health_and_safety</span>
+                <span class="font-bold text-white">MediScript AI</span>
+            </div>
+            <p class="text-slate-500 text-sm">© 2026 MediScript AI. For informational purposes only.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

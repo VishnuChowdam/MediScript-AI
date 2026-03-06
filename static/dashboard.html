@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MediScript AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: '#0ea5e9',
+                        secondary: '#14b8a6',
+                        dark: '#0f172a',
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'slide-up': 'slideUp 0.4s ease-out forwards',
+                        'fade-in': 'fadeIn 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .chat-widget {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+        }
+
+        .chat-widget.collapsed {
+            transform: translateY(120%) scale(0.9);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .tab-btn.active {
+            border-bottom: 2px solid #0ea5e9;
+            color: #0ea5e9;
+            background: white;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden selection:bg-sky-200">
+
+    <input type="hidden" id="apiUrl" value="http://127.0.0.1:8000/data_extraction">
+    <input type="file" id="hiddenFileInput" accept="image/*" class="hidden">
+
+    <!-- Sidebar -->
+    <aside id="mainSidebar"
+        class="w-72 bg-white border-r border-slate-200 flex flex-col shadow-sm z-20 flex-shrink-0 transition-all duration-300 ease-in-out relative left-0">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-sky-500 to-teal-500 text-white p-1 rounded-lg">
+                    <span class="material-icons text-xl block">health_and_safety</span>
+                </div>
+                <a href="/"
+                    class="font-bold text-xl tracking-tight text-slate-900 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap">MediScript
+                    AI</a>
+            </div>
+            <!-- Close Sidebar button for mobile/desktop (Optional inside sidebar) -->
+            <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-slate-600 transition-colors">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="px-6 py-4 flex-1 overflow-y-auto space-y-8">
+            <!-- Location Service -->
+            <div>
+                <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span class="material-icons text-sm">place</span> Location
+                </h3>
+                <div class="bg-sky-50 text-sky-800 text-xs p-3 rounded-lg border border-sky-100 mb-3 font-medium">
+                    Required for accurate nearby pharmacy mapping.
+                </div>
+                <button type="button" id="locBtn" onclick="requestRealLocation()"
+                    class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-4 rounded-xl transition-all flex justify-center items-center gap-2 border border-slate-200 shadow-sm">
+                    <span class="material-icons text-slate-500 text-base">my_location</span>
+                    <span>Enable Location</span>
+                </button>
+            </div>
+
+            <!-- Actions -->
+            <div>
+                <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span class="material-icons text-sm">dashboard</span> Actions
+                </h3>
+                <button onclick="toggleHistory()"
+                    class="w-full bg-white hover:bg-slate-50 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition-all flex items-center gap-3 border border-slate-200 shadow-sm mb-3 group">
+                    <span class="material-icons text-teal-500 group-hover:scale-110 transition-transform">history</span>
+                    View History
+                </button>
+            </div>
+
+            <!-- Guide -->
+            <div>
+                <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span class="material-icons text-sm">menu_book</span> Guide
+                </h3>
+                <ol
+                    class="text-sm text-slate-600 space-y-2 list-decimal list-inside bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <li>Enable location optionally.</li>
+                    <li>Upload prescription image.</li>
+                    <li>Review extracted data.</li>
+                    <li>Save to DB to chat with AI.</li>
+                </ol>
+            </div>
+
+            <!-- Disclaimer -->
+            <div>
+                <div class="bg-amber-50 rounded-xl p-4 border border-amber-200/50">
+                    <div class="flex gap-2 items-start text-amber-800 text-xs font-semibold mb-1">
+                        <span class="material-icons text-[14px]">info</span> Disclaimer
+                    </div>
+                    <p class="text-[11px] text-amber-700/80 leading-relaxed">
+                        This AI Application provides informational support only and does not substitute for professional
+                        medical advice, diagnosis, or treatment.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative bg-slate-50/50 min-w-0 transition-all duration-300 ease-in-out">
+        <!-- Top Banner / Header -->
+        <header
+            class="bg-white/80 backdrop-blur border-b border-slate-200 p-4 lg:p-6 sticky top-0 z-10 flex justify-between items-center shadow-sm">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()"
+                    class="text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 p-2 rounded-lg transition-colors flex items-center justify-center">
+                    <span class="material-icons">menu_open</span>
+                </button>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">New Analysis</h1>
+                    <p class="text-sm text-slate-500 mt-1">Upload an image to start extracting medical data.</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8">
+
+            <div class="max-w-6xl mx-auto space-y-6">
+
+                <!-- Upload Zone -->
+                <div id="uploadWrap" onclick="triggerUpload()"
+                    class="group relative cursor-pointer bg-white border-2 border-dashed border-sky-300 rounded-2xl p-10 text-center hover:bg-sky-50 transition-colors shadow-sm hover:shadow">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-sky-400/5 to-teal-400/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <div class="relative flex flex-col items-center justify-center space-y-4">
+                        <div
+                            class="w-20 h-20 bg-sky-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <span class="material-icons text-4xl text-sky-500">cloud_upload</span>
+                        </div>
+                        <div>
+                            <p class="text-xl font-semibold text-slate-700">Drag and drop or click to upload</p>
+                            <p class="text-sm text-slate-500 mt-2">Supports JPG, PNG up to 200MB</p>
+                        </div>
+                        <button
+                            class="mt-4 px-6 py-2 bg-white border border-slate-200 rounded-full text-slate-700 font-medium hover:bg-slate-50 shadow-sm transition-all">Browse
+                            Files</button>
+                    </div>
+                </div>
+
+                <!-- Waiting State -->
+                <div id="waitingState" class="py-20 text-center animate-fade-in">
+                    <div
+                        class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-slate-100 mb-6 border-8 border-white shadow-sm">
+                        <span class="material-icons text-5xl text-slate-300">receipt_long</span>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-slate-400">Waiting for input...</h3>
+                </div>
+
+                <!-- Results Container -->
+                <div id="resultsContainer" class="hidden h-auto pb-20 animate-slide-up">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch h-full">
+
+                        <!-- Left Col: Image -->
+                        <div
+                            class="col-span-1 lg:col-span-5 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-[500px]">
+                            <div
+                                class="bg-slate-50 border-b border-slate-100 px-4 py-3 font-semibold text-slate-700 flex items-center gap-2">
+                                <span class="material-icons text-sky-500 text-sm">image</span> Source Image
+                            </div>
+                            <div class="flex-1 bg-slate-900 relative group cursor-zoom-in" onclick="openFullscreen()">
+                                <img id="dashboardImg" src="" alt="Source Prescription"
+                                    class="w-full h-full object-contain p-2 group-hover:scale-[1.02] transition-transform duration-300">
+                                <div
+                                    class="absolute bottom-4 right-4 bg-black/60 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span class="material-icons text-xs">zoom_in</span> Zoom
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Col: Analysis -->
+                        <div
+                            class="col-span-1 lg:col-span-7 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm h-[500px] relative">
+                            <!-- Loader Overlay -->
+                            <div id="dashboardLoader"
+                                class="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 rounded-2xl flex-col items-center justify-center hidden">
+                                <div
+                                    class="w-12 h-12 border-4 border-slate-100 border-t-sky-500 rounded-full animate-spin mb-4">
+                                </div>
+                                <p class="text-slate-600 font-semibold text-lg animate-pulse">Analyzing Prescription via
+                                    AI...</p>
+                            </div>
+
+                            <!-- Tabs -->
+                            <div class="flex border-b border-slate-200 bg-slate-50/50 rounded-t-2xl px-2 pt-2">
+                                <button
+                                    class="tab-btn active px-5 py-3 text-sm font-semibold text-slate-600 rounded-t-lg transition-colors flex items-center gap-2"
+                                    onclick="switchTab('tabData', this)">
+                                    <span class="material-icons text-sm">wysiwyg</span> Extracted Data
+                                </button>
+                                <button
+                                    class="tab-btn px-5 py-3 text-sm font-semibold text-slate-600 rounded-t-lg transition-colors flex items-center gap-2 relative"
+                                    onclick="switchTab('tabWarn', this)">
+                                    <span class="material-icons text-sm">warning_amber</span> Critical Warnings
+                                    <span id="warnBadge" class="hidden absolute top-2 right-2 flex h-2 w-2">
+                                        <span
+                                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                    </span>
+                                </button>
+                            </div>
+
+                            <!-- Tab: Data -->
+                            <div id="tabData" class="flex-1 p-5 overflow-y-auto w-full">
+                                <div id="patientData"
+                                    class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 mb-6 flex flex-wrap gap-x-8 gap-y-2 justify-between items-center text-sm font-medium text-slate-700">
+                                    Loading...
+                                </div>
+
+                                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-left border-collapse text-sm whitespace-nowrap">
+                                            <thead>
+                                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600">
+                                                    <th class="py-3 px-4 font-semibold">Medication</th>
+                                                    <th class="py-3 px-4 font-semibold">Dosage</th>
+                                                    <th class="py-3 px-4 font-semibold">Frequency</th>
+                                                    <th class="py-3 px-4 font-semibold">Duration</th>
+                                                    <th class="py-3 px-4 font-semibold text-center w-[1%]">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="medTable" class="divide-y divide-slate-100 text-slate-700">
+                                                <!-- Rows populated dynamically -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div id="emptyTableState" class="hidden p-8 text-center text-slate-500">
+                                        No medications found.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Warnings -->
+                            <div id="tabWarn" class="flex-1 p-5 overflow-y-auto hidden">
+                                <div id="warningList" class="space-y-4">
+                                    <!-- Warnings populated dynamically -->
+                                </div>
+                            </div>
+
+                            <!-- Footer Actions -->
+                            <div
+                                class="border-t border-slate-100 bg-slate-50 px-5 py-4 rounded-b-2xl flex justify-end gap-3 flex-shrink-0">
+                                <button onclick="downloadText()"
+                                    class="px-4 py-2 border border-slate-300 bg-white text-slate-700 rounded-lg hover:bg-slate-100 font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
+                                    <span class="material-icons text-sm">download</span> Download TXT
+                                </button>
+                                <button onclick="saveToDb(event)"
+                                    class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
+                                    <span class="material-icons text-sm">save</span> Save to DB
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Chat Trigger Button -->
+    <button onclick="toggleChat()"
+        class="fixed bottom-6 right-6 w-14 h-14 bg-sky-500 hover:bg-sky-600 text-white rounded-full shadow-xl shadow-sky-500/30 flex items-center justify-center hover:scale-110 transition-transform z-50">
+        <span class="material-icons" style="font-size: 28px;">support_agent</span>
+    </button>
+
+    <!-- Chat Widget -->
+    <div id="chatPopup"
+        class="chat-widget collapsed fixed bottom-24 right-6 w-80 sm:w-[350px] bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 flex flex-col h-[500px] overflow-hidden origin-bottom-right">
+        <div
+            class="bg-gradient-to-r from-sky-500 to-teal-500 text-white p-4 flex justify-between items-center shadow-sm">
+            <div class="font-semibold flex items-center gap-2">
+                <span class="material-icons text-[20px]">psychology</span> MediAI Assistant
+            </div>
+            <button onclick="toggleChat()"
+                class="hover:bg-white/20 p-1 rounded-full text-white transition-colors flex items-center justify-center">
+                <span class="material-icons text-[20px]">close</span>
+            </button>
+        </div>
+        <div id="chatBox" class="flex-1 p-4 overflow-y-auto bg-slate-50 flex flex-col gap-3 font-sm">
+            <div
+                class="self-start max-w-[85%] bg-white border border-slate-200 text-slate-800 p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm">
+                Hello! I am your AI assistant. Save your prescription data to the database, then ask me anything about
+                it.
+            </div>
+        </div>
+        <div class="p-3 bg-white border-t border-slate-100 flex gap-2">
+            <input type="text" id="chatInput" placeholder="Ask a question..."
+                class="flex-1 bg-slate-100 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+            <button onclick="sendChat()"
+                class="w-10 h-10 bg-sky-500 text-white rounded-full flex items-center justify-center hover:bg-sky-600 transition-colors shrink-0 shadow-sm shadow-sky-500/30">
+                <span class="material-icons text-[18px]">send</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Fullscreen Image Override -->
+    <div id="fullscreenOverlay" onclick="closeFullscreen()"
+        class="fixed inset-0 bg-black/95 z-[9999] hidden items-center justify-center cursor-zoom-out animate-fade-in p-4 lg:p-12">
+        <button
+            class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors bg-white/10 rounded-full w-12 h-12 flex items-center justify-center backdrop-blur">
+            <span class="material-icons">close</span>
+        </button>
+        <img id="fullscreenImg" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal"
+        class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden items-center justify-center animate-fade-in px-4">
+        <div class="bg-white max-w-5xl w-full rounded-2xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
+            onclick="event.stopPropagation()">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <span class="material-icons text-teal-500">history</span> Database History
+                </h2>
+                <div class="flex gap-2">
+                    <button onclick="clearHistory()"
+                        class="text-rose-500 hover:text-rose-600 hover:bg-rose-50 text-sm font-semibold py-1.5 px-3 rounded-lg transition-colors border border-rose-100 flex items-center gap-1 shadow-sm">
+                        <span class="material-icons text-sm">delete_sweep</span> Clear
+                    </button>
+                    <button onclick="toggleHistory()"
+                        class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1 rounded-lg transition-colors">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6 flex-1 overflow-auto bg-white relative">
+                <div id="historyLoading"
+                    class="absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center">
+                    <div class="w-10 h-10 border-4 border-slate-100 border-t-teal-500 rounded-full animate-spin mb-3">
+                    </div>
+                    <p class="text-slate-500 font-medium">Fetching records...</p>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr id="historyHeader" class="text-slate-600 font-semibold"></tr>
+                        </thead>
+                        <tbody id="historyBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="fixed top-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+        const fileInput = document.getElementById('hiddenFileInput');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const waitingState = document.getElementById('waitingState');
+        const dashboardImg = document.getElementById('dashboardImg');
+        const loader = document.getElementById('dashboardLoader');
+        const apiUrl = document.getElementById('apiUrl').value;
+        const uploadWrap = document.getElementById('uploadWrap');
+        let currentData = null;
+        let userCoordinates = null;
+
+        // --- SIDEBAR TOGGLE ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+
+            // Toggle logic using -ml-72
+            if (sidebar.classList.contains('-ml-72')) {
+                sidebar.classList.remove('-ml-72');
+            } else {
+                sidebar.classList.add('-ml-72');
+            }
+
+            // Adjust toggle button icon
+            const btnIcon = document.querySelector('header button .material-icons');
+            if (sidebar.classList.contains('-ml-72')) {
+                btnIcon.textContent = 'menu';
+            } else {
+                btnIcon.textContent = 'menu_open';
+            }
+        }
+
+        function triggerUpload() { fileInput.click(); }
+
+        // --- LOCATION ---
+        function requestRealLocation() {
+            if (!navigator.geolocation) {
+                showToast("Geolocation not supported by browser.", "error");
+                return;
+            }
+            const btn = document.getElementById('locBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<span class="material-icons animate-spin text-sm">refresh</span> <span>Requesting...</span>`;
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    userCoordinates = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+                    btn.innerHTML = `<span class="material-icons text-green-500 text-sm">check_circle</span> <span class="text-green-700">Location Saved</span>`;
+                    btn.classList.replace('bg-slate-100', 'bg-green-50');
+                    btn.classList.replace('border-slate-200', 'border-green-200');
+                    showToast(`📍 Location Acquired Successfully`, "success");
+                },
+                (err) => {
+                    showToast("Permission denied for location.", "error");
+                    btn.innerHTML = originalHTML;
+                }
+            );
+        }
+
+        // --- UPLOAD HANDLER ---
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            waitingState.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            uploadWrap.classList.add('hidden'); // Optional: hide upload box or keep it above? Let's keep it above but smaller, actually we didn't style a smaller one, so let's keep it.
+
+            dashboardImg.src = URL.createObjectURL(file);
+            loader.style.display = 'flex';
+            document.getElementById('warnBadge').classList.add('hidden');
+            switchTab('tabData', document.querySelector('.tab-btn'));
+
+            const formData = new FormData();
+            formData.append('image', file);
+            if (userCoordinates) formData.append('user_location', JSON.stringify(userCoordinates));
+
+            try {
+                const res = await fetch(apiUrl, { method: 'POST', body: formData });
+                if (!res.ok) throw new Error("Server Error");
+                const data = await res.json();
+                currentData = data;
+
+                renderDashboard(data);
+                loader.style.display = 'none';
+                showToast("Analysis Completed", "success");
+                fetchWarnings(data);
+
+            } catch (err) {
+                showToast("Analysis Failed. " + err.message, "error");
+                loader.style.display = 'none';
+            }
+        });
+
+        // Drag and Drop
+        uploadWrap.addEventListener('dragover', (e) => { e.preventDefault(); uploadWrap.classList.add('border-sky-500', 'bg-sky-50'); });
+        uploadWrap.addEventListener('dragleave', () => { uploadWrap.classList.remove('border-sky-500', 'bg-sky-50'); });
+        uploadWrap.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadWrap.classList.remove('border-sky-500', 'bg-sky-50');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // --- RENDER ---
+        function renderDashboard(data) {
+            const p = data.patient_info || {};
+            const name = p.patient_name || p.Name || 'Unknown';
+            const age = p.age || p.Age || '--';
+            const date = p.Date || '--';
+
+            document.getElementById('patientData').innerHTML = `
+                <div class="flex items-center gap-2"><span class="material-icons text-indigo-400 text-lg">person</span> <span class="font-bold text-base text-indigo-900">${name}</span></div>
+                <div class="flex items-center gap-1.5"><span class="material-icons text-slate-400 text-[18px]">calendar_today</span> ${date}</div>
+                <div class="flex items-center gap-1.5"><span class="material-icons text-slate-400 text-[18px]">cake</span> Age: ${age}</div>
+            `;
+
+            const tbody = document.getElementById('medTable');
+            const emptyState = document.getElementById('emptyTableState');
+            tbody.innerHTML = '';
+
+            const meds = data.Prescription_info || [];
+            if (meds.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            meds.forEach(m => {
+                const dur = m.Duration || m.duration || 'Not provided';
+                const mapLink = m.Map_link && m.Map_link !== 'Not provided'
+                    ? `<a href="${m.Map_link}" target="_blank" class="text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 p-1.5 rounded-lg transition-colors inline-block" title="Find nearby"><span class="material-icons text-[18px]">place</span></a>`
+                    : '<span class="text-slate-300">-</span>';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors group">
+                        <td class="py-3 px-4 font-bold text-sky-700">${m.medications}</td>
+                        <td class="py-3 px-4">${m.Dosage}</td>
+                        <td class="py-3 px-4"><span class="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-medium">${m.Frequency}</span></td>
+                        <td class="py-3 px-4">${dur}</td>
+                        <td class="py-3 px-4 text-center">${mapLink}</td>
+                    </tr>`;
+            });
+        }
+
+        // --- WARNINGS ---
+        async function fetchWarnings(data) {
+            try {
+                const cleanData = JSON.parse(JSON.stringify(data));
+                if (cleanData.Prescription_info) {
+                    cleanData.Prescription_info = cleanData.Prescription_info.map(item => ({
+                        medications: item.medications,
+                        Dosage: item.Dosage,
+                        Frequency: item.Frequency,
+                        Duration: item.Duration || item.duration || "Not provided",
+                        Map_link: item.Map_link
+                    }));
+                }
+
+                const url = apiUrl.replace('data_extraction', 'critical_warnings');
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cleanData)
+                });
+
+                const warnings = await res.json();
+                const div = document.getElementById('warningList');
+                div.innerHTML = '';
+
+                if (warnings.detail) {
+                    div.innerHTML = `<div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm">Validation Error: ${JSON.stringify(warnings.detail)}</div>`;
+                    return;
+                }
+
+                if (!warnings || warnings.length === 0) {
+                    div.innerHTML = '<div class="bg-green-50 border border-green-200 text-green-700 p-4 rounded-xl flex items-center gap-2"><span class="material-icons">check_circle</span> No critical warnings detected.</div>';
+                } else {
+                    document.getElementById('warnBadge').classList.remove('hidden');
+                    let list = Array.isArray(warnings) ? warnings : [JSON.stringify(warnings)];
+                    list.forEach(w => {
+                        let cleanW = w.trim();
+                        if (!cleanW) return;
+                        if (cleanW.startsWith('-')) cleanW = cleanW.substring(1).trim();
+
+                        // Bold text inside brackets
+                        cleanW = cleanW.replace(/\[(.*?)\]/g, '<strong class="text-rose-600">[$1]</strong>');
+
+                        div.innerHTML += `
+                            <div class="bg-orange-50 border border-orange-200 p-4 rounded-xl flex gap-3 text-sm text-slate-800 shadow-sm shadow-orange-100 mt-3">
+                                <span class="material-icons text-orange-500 shrink-0">warning</span>
+                                <div>${cleanW}</div>
+                            </div>`;
+                    });
+                    showToast("⚠️ Critical Warnings Found", "warning");
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // --- SAVE TO DB ---
+        function saveToDb(event) {
+            if (event) event.preventDefault();
+            if (!currentData) { showToast("No data to save", "error"); return; }
+
+            const btn = event.currentTarget;
+            const origHTML = btn.innerHTML;
+            btn.innerHTML = '<span class="material-icons animate-spin text-sm">refresh</span> Saving...';
+
+            const payload = {
+                patient_info: currentData.patient_info,
+                Prescription_info: currentData.Prescription_info.map(item => ({
+                    medications: item.medications,
+                    Dosage: item.Dosage,
+                    Frequency: item.Frequency,
+                    Duration: item.Duration || item.duration || "Not provided",
+                    Map_link: item.Map_link
+                }))
+            };
+
+            fetch("http://127.0.0.1:8000/post_into_db", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => {
+                    if (res.ok) {
+                        showToast("Saved to Database. Ready for Chat.", "success");
+                        btn.innerHTML = '<span class="material-icons text-sm">check</span> Saved';
+                        btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                        setTimeout(() => { btn.innerHTML = origHTML; btn.classList.remove('bg-green-600', 'hover:bg-green-700'); }, 3000);
+                    } else throw new Error();
+                }).catch(() => {
+                    showToast("Failed to save to Database.", "error");
+                    btn.innerHTML = origHTML;
+                });
+        }
+
+        // --- CLEAR HISTORY ---
+        async function clearHistory() {
+            if (!confirm("Are you sure you want to clear all history? This cannot be undone.")) return;
+            const btn = document.querySelector('button[onclick="clearHistory()"]');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<span class="material-icons animate-spin text-sm">refresh</span> Clearing...';
+            try {
+                const res = await fetch("http://127.0.0.1:8000/clear_history", { method: 'DELETE' });
+                if (res.ok) {
+                    showToast("History cleared", "success");
+                    toggleHistory();
+                    setTimeout(() => toggleHistory(), 200);
+                } else throw new Error();
+            } catch (e) {
+                showToast("Failed to clear history", "error");
+            } finally {
+                if (btn) btn.innerHTML = originalHTML;
+            }
+        }
+
+        // --- MODALS & TABS ---
+        async function toggleHistory() {
+            const modal = document.getElementById('historyModal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                const body = document.getElementById('historyBody');
+                const head = document.getElementById('historyHeader');
+                const loader = document.getElementById('historyLoading');
+
+                loader.classList.remove('hidden');
+                body.innerHTML = ''; head.innerHTML = '';
+
+                try {
+                    const res = await fetch("http://127.0.0.1:8000/get_Saved_data");
+                    const json = await res.json();
+                    const data = typeof json === 'string' ? JSON.parse(json) : json;
+                    loader.classList.add('hidden');
+
+                    if (!data || data.length === 0) {
+                        body.innerHTML = '<tr><td class="p-4 text-center text-slate-500">No history found.</td></tr>';
+                        return;
+                    }
+
+                    const keys = Object.keys(data[0]);
+                    keys.forEach(k => head.innerHTML += `<th class="py-3 px-4 text-left">${k.replace(/_/g, ' ')}</th>`);
+
+                    data.forEach(r => {
+                        let tr = '<tr class="hover:bg-slate-50 transition-colors">';
+                        keys.forEach(k => {
+                            let val = r[k];
+                            // Format empty row spacer if needed based on original logic or just check if empty string
+                            if (val === 'Not provided' || val === null) val = '<span class="text-slate-400">-</span>';
+                            else if (k === 'MAP_LINK' && typeof val === 'string' && val.startsWith('http'))
+                                val = `<a href="${val}" target="_blank" class="text-sky-500 hover:underline">Link</a>`;
+                            tr += `<td class="py-3 px-4">${val}</td>`;
+                        });
+                        tr += '</tr>';
+                        body.innerHTML += tr;
+                    });
+                } catch (e) {
+                    loader.innerHTML = '<p class="text-red-500">Failed to load history.</p>';
+                }
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        // Close history clicking outside
+        document.getElementById('historyModal').addEventListener('click', toggleHistory);
+
+        function openFullscreen() {
+            const src = document.getElementById('dashboardImg').src;
+            if (src) {
+                document.getElementById('fullscreenImg').src = src;
+                const overlay = document.getElementById('fullscreenOverlay');
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            }
+        }
+        function closeFullscreen() {
+            const overlay = document.getElementById('fullscreenOverlay');
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+        }
+
+        function switchTab(id, btn) {
+            document.getElementById('tabData').classList.add('hidden');
+            document.getElementById('tabWarn').classList.add('hidden');
+            document.getElementById(id).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+        }
+
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            let bgClass = "bg-slate-800";
+            let icon = "info";
+            if (type === 'success') { bgClass = "bg-green-600"; icon = "check_circle"; }
+            if (type === 'error') { bgClass = "bg-red-600"; icon = "error"; }
+            if (type === 'warning') { bgClass = "bg-orange-500"; icon = "warning"; }
+
+            toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-slide-up max-w-sm border border-white/10`;
+            toast.innerHTML = `<span class="material-icons text-xl">${icon}</span> <span class="font-medium text-sm">${msg}</span>`;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // --- DOWNLOAD REPORT ---
+        function downloadText() {
+            if (!currentData) { showToast("No data to download", "error"); return; }
+            let text = "MEDISCRIPT AI REPORT\n";
+            text += "==============================================================================\n";
+            const p = currentData.patient_info || {};
+            text += `Patient Name: ${p.patient_name || p.Name || 'N/A'}\n`;
+            text += `Age:          ${p.age || p.Age || 'N/A'}\n`;
+            text += `Date:         ${p.Date || 'N/A'}\n`;
+            text += "==============================================================================\n\n";
+
+            text += "MEDICATIONS LIST:\n";
+            text += "------------------------------------------------------------------------------\n";
+            text += "| Medication           | Dosage      | Frequency    | Duration     |\n";
+            text += "|----------------------|-------------|--------------|--------------|\n";
+
+            (currentData.Prescription_info || []).forEach(m => {
+                const med = (m.medications || "").padEnd(20).substring(0, 20);
+                const dos = (m.Dosage || "").padEnd(11).substring(0, 11);
+                const freq = (m.Frequency || "").padEnd(12).substring(0, 12);
+                const dur = (m.duration || m.Duration || "").padEnd(12).substring(0, 12);
+                text += `| ${med} | ${dos} | ${freq} | ${dur} |\n`;
+            });
+            text += "------------------------------------------------------------------------------\n";
+
+            const blob = new Blob([text], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "MediScript_Report.txt";
+            a.click();
+            showToast("Report Downloaded", "success");
+        }
+
+        // --- CHAT INTERFACE ---
+        function toggleChat() {
+            const popup = document.getElementById('chatPopup');
+            popup.classList.toggle('collapsed');
+        }
+
+        async function sendChat() {
+            const inp = document.getElementById('chatInput');
+            const val = inp.value.trim();
+            if (!val) return;
+
+            const box = document.getElementById('chatBox');
+
+            // Add User msg
+            box.innerHTML += `
+                <div class="self-end max-w-[85%] bg-sky-500 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm text-sm">
+                    ${val}
+                </div>`;
+            inp.value = '';
+            box.scrollTop = box.scrollHeight;
+
+            // Add typing indicator
+            const typingId = 'typing-' + Date.now();
+            box.innerHTML += `
+                <div id="${typingId}" class="self-start max-w-[85%] bg-white border border-slate-200 text-slate-800 p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm flex gap-1 items-center">
+                    <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                    <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                    <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                </div>`;
+            box.scrollTop = box.scrollHeight;
+
+            try {
+                const res = await fetch("http://127.0.0.1:8000/chat", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: val })
+                });
+                const data = await res.json();
+                document.getElementById(typingId).remove();
+
+                // Add AI msg
+                box.innerHTML += `
+                    <div class="self-start max-w-[85%] bg-white border border-slate-200 text-slate-800 p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm">
+                        ${data.response.replace(/\n/g, '<br>')}
+                    </div>`;
+                box.scrollTop = box.scrollHeight;
+            } catch (e) {
+                document.getElementById(typingId).remove();
+                box.innerHTML += `<div class="self-start max-w-[85%] bg-red-50 text-red-600 border border-red-200 p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm text-[13px]">Error connecting to AI.</div>`;
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+        document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChat(); });
+    </script>
+</body>
+
+</html>
