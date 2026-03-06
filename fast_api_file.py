@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 #from PIL import Image
 import io
+import os
 import Extracting_prescription_data
 import traceback
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +15,10 @@ import Critical_Warinings
 import SQLLITE3_DataBase
 from AI_assistant_logic import MedicalAssistant
 
-api = FastAPI()
+
+PORT = int(os.environ.get("PORT", 8000))
+
+api = FastAPI(title="MediScript AI API")
 
 # --- 1. Mount Static Files (So you can open the Frontend) ---
 api.mount("/static", StaticFiles(directory="static"), name="static")
